@@ -7,7 +7,7 @@ export const connectDB = async () => {
       return mongoose.connection;
     }
 
-    const con = await mongoose.connect(ENV.db_url);
+    const con = await mongoose.connect(ENV.DB_URL);
 
     console.log(`MongoDB Connected! DB host: ${con.connection.host}`);
 
