@@ -29,7 +29,7 @@ app.get("/health", (req, res) => {
 });
 
 if (ENV.NODE_ENV === "production") {
-  const frontendDistPath = path.join(__dirname, "../../frontend/dist");
+  const frontendDistPath = path.join(__dirname, "../frontend/dist");
 
   app.use(express.static(frontendDistPath));
 

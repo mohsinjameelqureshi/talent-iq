@@ -1,0 +1,17 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        VITE_CLERK_PUBLISHABLE_KEY: ${VITE_CLERK_PUBLISHABLE_KEY}
+
+    container_name: talent-iq
+
+    env_file:
+      - ./backend/.env
+
+    ports:
+      - "127.0.0.1:5000:5000"
+
+    restart: unless-stopped
