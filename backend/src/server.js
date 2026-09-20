@@ -22,8 +22,10 @@ app.use(express.json());
 // this means server allow browser to include cookies on every request
 app.use(cors({ origin: ENV.CLIENT_URL, credentials: true }));
 
+// inngest
 app.use("/api/inngest", serve({ client: inngest, functions }));
 
+// health route
 app.get("/health", (req, res) => {
   res.status(200).json({ msg: "api is up and running" });
 });
