@@ -11,10 +11,32 @@ import { connectDB } from "./lib/db.js";
 import cors from "cors";
 import { serve } from "inngest/express";
 import { inngest, functions } from "./lib/inngest.js";
+import logger from "./logger.js";
+import morgan from "morgan";
 
 const app = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// logs format
+const morganFormat = ":method :url :status :response-time ms";
+app.use(express.json());
+
+app.use(
+  morgan(morganFormat, {
+    stream: {
+      write: (message) => {
+        const logObject = {
+          method: message.split(" ")[0],
+          url: message.split(" ")[1],
+          status: message.split(" ")[2],
+          responseTime: message.split(" ")[3],
+        };
+        logger.info(JSON.stringify(logObject));
+      },
+    },
+  }),
+);
 
 //middlewares
 app.use(express.json());
