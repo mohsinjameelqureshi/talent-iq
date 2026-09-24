@@ -13,44 +13,73 @@ import { serve } from "inngest/express";
 import { inngest, functions } from "./lib/inngest.js";
 import logger from "./logger.js";
 import morgan from "morgan";
+import { clerkMiddleware } from "@clerk/express";
+import chatRoutes from "./routes/chatRoutes.routes.js";
 
 const app = express();
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// logs format
-const morganFormat = ":method :url :status :response-time ms";
+// Basic middleware
+
 app.use(express.json());
+
+app.use(
+  cors({
+    origin: ENV.CLIENT_URL,
+    credentials: true,
+  }),
+);
+
+// Logging
+
+const morganFormat = ":method :url :status :response-time ms";
 
 app.use(
   morgan(morganFormat, {
     stream: {
       write: (message) => {
-        const logObject = {
-          method: message.split(" ")[0],
-          url: message.split(" ")[1],
-          status: message.split(" ")[2],
-          responseTime: message.split(" ")[3],
-        };
-        logger.info(JSON.stringify(logObject));
+        const [method, url, status, responseTime] = message.trim().split(" ");
+
+        logger.info(
+          JSON.stringify({
+            method,
+            url,
+            status,
+            responseTime,
+          }),
+        );
       },
     },
   }),
 );
 
-//middlewares
-app.use(express.json());
+// Clerk
 
-// this means server allow browser to include cookies on every request
-app.use(cors({ origin: ENV.CLIENT_URL, credentials: true }));
+app.use(clerkMiddleware());
 
-// inngest
-app.use("/api/inngest", serve({ client: inngest, functions }));
+// Inngest
 
-// health route
+app.use(
+  "/api/inngest",
+  serve({
+    client: inngest,
+    functions,
+  }),
+);
+
+app.use("/api/chat", chatRoutes);
+
+// Health check
+
 app.get("/health", (req, res) => {
-  res.status(200).json({ msg: "api is up and running" });
+  res.status(200).json({
+    msg: "API is up and running",
+  });
 });
+
+// Production frontend
 
 if (ENV.NODE_ENV === "production") {
   const frontendDistPath = path.join(__dirname, "../frontend/dist");
@@ -62,12 +91,14 @@ if (ENV.NODE_ENV === "production") {
   });
 }
 
+// Start server
+
 connectDB()
   .then(() => {
     app.listen(ENV.PORT, () => {
-      console.log(`server is running on port ${ENV.PORT}`);
+      console.log(`Server is running on port ${ENV.PORT}`);
     });
   })
   .catch((err) => {
-    console.log("MongoDB connection error", err);
+    console.error("MongoDB connection error:", err);
   });
